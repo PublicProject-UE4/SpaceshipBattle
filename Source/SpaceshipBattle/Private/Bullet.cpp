@@ -3,6 +3,10 @@
 
 #include "Bullet.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Enemy.h"
+#include "Engine/BlockingVolume.h"
+#include <EnemySpawn.h>
+#include <Kismet/GameplayStatics.h>
 
 // Sets default values
 ABullet::ABullet()
@@ -28,7 +32,6 @@ ABullet::ABullet()
 void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -36,5 +39,20 @@ void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ABullet::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	AEnemy *Enemy = Cast<AEnemy>(OtherActor);
+	if (Enemy)
+	{
+		Enemy->OnDeath();
+	}
+	else if(Cast<ABlockingVolume>(OtherActor))
+	{
+		Destroy();
+	}
 }
 

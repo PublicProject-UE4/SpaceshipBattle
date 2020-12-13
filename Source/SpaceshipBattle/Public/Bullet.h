@@ -9,6 +9,7 @@
 class USceneComponent;
 class UStaticMeshComponent;
 class UProjectileMovementComponent;
+class AEnemySpawn;
 
 UCLASS()
 class SPACESHIPBATTLE_API ABullet : public AActor
@@ -34,8 +35,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 		UProjectileMovementComponent *ProjectileMovementComp;
 
+	AEnemySpawn *EnemySpawn;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
 };

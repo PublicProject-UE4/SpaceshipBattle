@@ -17,4 +17,14 @@ class SPACESHIPBATTLE_API ASpaveShipGameMode : public AGameModeBase
 public:
 
 	ASpaveShipGameMode();
+
+	void IncreaseScore();
+
+	UFUNCTION(BlueprintCallable, Category = ShipGameMode)
+		int GetScore();
+
+protected:
+
+	int Score;
+
 };

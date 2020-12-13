@@ -12,6 +12,10 @@ class UCameraComponent;
 class USpringArmComponent;
 class APlayerController;
 class ABullet;
+class USoundCue;
+class UParticleSystemComponent;
+class UParticleSystem;
+
 
 UCLASS()
 class SPACESHIPBATTLE_API ASpaceShip : public APawn
@@ -43,6 +47,14 @@ protected:
 	// ¿ª»ð
 	void Fire();
 
+	void StartFire();
+
+	void EndFire();
+
+	void RestartLevel();
+
+	void OnDeath();
+
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Component")
@@ -63,7 +75,24 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Component")
 		USceneComponent *SpawnPoint;
 
+	UPROPERTY(VisibleAnywhere, Category = "Component")
+		UParticleSystemComponent *ThrusterParticleComp;
+
+	// ±¬Õ¨ºóµÄÀý×ÓÌØÐ§
+	UPROPERTY(EditAnywhere, Category = "Particle")
+		UParticleSystem* ExplosionParticle;
+
 	APlayerController *PC;
+
+	FTimerHandle TimerHandle_BetweenShot;
+
+	FTimerHandle TimerHandle_Restart;
+
+	bool bDead;
+
+	// ÅÐ¶ÏÊÇ·ñÒÆ¶¯
+	bool bForwardMove;
+	bool bRightMove;
 
 public:	
 	// Called every frame
@@ -72,6 +101,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+
+	bool GetBDead() { return bDead; };
+
 public:
 
 	UPROPERTY(EditAnywhere, Category = "Default")
@@ -79,5 +112,16 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Default")
 		TSubclassOf<ABullet> Bullet;
+
+	UPROPERTY(EditAnywhere, Category = "Default")
+		float BetweenShot;
+
+	// Íæ¼Ò±¬Õ¨ÉùÒô
+	UPROPERTY(EditAnywhere, Category = "Sound")
+		USoundCue *GameOverCue;
+
+	// Éä»÷ÉùÒô
+	UPROPERTY(EditAnywhere, Category = "Sound")
+		USoundCue *ShootCue;
 
 };

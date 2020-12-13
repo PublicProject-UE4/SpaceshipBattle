@@ -8,3 +8,13 @@ ASpaveShipGameMode::ASpaveShipGameMode()
 {
 	DefaultPawnClass = ASpaceShip::StaticClass();
 }
+
+void ASpaveShipGameMode::IncreaseScore()
+{
+	Score++;
+}
+
+int ASpaveShipGameMode::GetScore()
+{
+	return Score;
+}

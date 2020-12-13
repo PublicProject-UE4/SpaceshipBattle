@@ -11,6 +11,11 @@
 #include "Components/SceneComponent.h"
 #include "Bullet.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
+#include "Enemy.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 
@@ -25,7 +30,7 @@ ASpaceShip::ASpaceShip()
 	RootComponent = RootSceneComp;
 
 	ShipSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipSM"));
-	ShipSM->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// ShipSM->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ShipSM->SetRelativeRotation(FRotator(0, 270, 0));
 	ShipSM->SetRelativeScale3D(FVector(0.75, 0.75, 0.75));
 	ShipSM->SetupAttachment(RootSceneComp);
@@ -50,6 +55,12 @@ ASpaceShip::ASpaceShip()
 	SpawnPoint->SetRelativeRotation(FRotator(0, 90, 0));
 	SpawnPoint->SetupAttachment(ShipSM);
 
+	ThrusterParticleComp = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ThrusterParticleComp"));
+	ThrusterParticleComp->SetRelativeLocation(FVector(-88, 0, 0));
+	ThrusterParticleComp->SetRelativeRotation(FRotator(90, 0, 0));
+	ThrusterParticleComp->SetupAttachment(RootComponent);
+
+
 	Init();
 
 }
@@ -69,6 +80,8 @@ void ASpaceShip::BeginPlay()
 void ASpaceShip::Init()
 {
 	Speed = 2500.0f;
+	BetweenShot = 0.2;
+	bDead = false;
 }
 
 void ASpaceShip::LookAtCursor()
@@ -89,21 +102,71 @@ void ASpaceShip::Move(float DeltaTime)
 
 void ASpaceShip::MoveForward(float Value)
 {
+	if (Value != 0)
+	{
+		bForwardMove = true;
+	}
+	else
+	{
+		bForwardMove = false;
+	}
 	AddMovementInput(FVector::ForwardVector, Value);
 }
 
 void ASpaceShip::MoveRight(float Value)
 {
+	if (Value != 0)
+	{
+		bRightMove = true;
+	}
+	else
+	{
+		bRightMove = false;
+	}
 	AddMovementInput(FVector::RightVector, Value);
 }
 
 void ASpaceShip::Fire()
 {
-	if (Bullet)
+	if (Bullet && !bDead)
 	{
 		FActorSpawnParameters SpawnParames;
 		GetWorld()->SpawnActor<ABullet>(Bullet, SpawnPoint->GetComponentLocation(), SpawnPoint->GetComponentRotation(), SpawnParames);
+		if (ShootCue)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, ShootCue, GetActorLocation());
+		}
 	}
+}
+
+void ASpaceShip::StartFire()
+{
+	GetWorldTimerManager().SetTimer(TimerHandle_BetweenShot, this, &ASpaceShip::Fire, BetweenShot, true, 0.0);
+}
+
+void ASpaceShip::EndFire()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle_BetweenShot);
+}
+
+void ASpaceShip::RestartLevel()
+{
+	UGameplayStatics::OpenLevel(this, "MainMap");
+}
+
+void ASpaceShip::OnDeath()
+{
+	bDead = true;
+	RootSceneComp->SetVisibility(false, true);
+	if (GameOverCue)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, GameOverCue, GetActorLocation());
+	}
+	if (ExplosionParticle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticle, GetActorLocation(), FRotator::ZeroRotator, true);
+	}
+	GetWorldTimerManager().SetTimer(TimerHandle_Restart, this, &ASpaceShip::RestartLevel, 2.0f, false);
 }
 
 // Called every frame
@@ -111,9 +174,23 @@ void ASpaceShip::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	LookAtCursor();
-
-	Move(DeltaTime);
+	if (!bDead)
+	{
+		if (bForwardMove || bRightMove)
+		{
+			ThrusterParticleComp->Activate();
+		}
+		else
+		{
+			ThrusterParticleComp->Deactivate();
+		}
+		LookAtCursor();
+		Move(DeltaTime);
+	}
+	else
+	{
+		ThrusterParticleComp->Deactivate();
+	}
 }
 
 // Called to bind functionality to input
@@ -123,6 +200,19 @@ void ASpaceShip::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASpaceShip::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASpaceShip::MoveRight);
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ASpaceShip::Fire);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ASpaceShip::StartFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASpaceShip::EndFire);
+}
+
+void ASpaceShip::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	AEnemy *Enemy = Cast<AEnemy>(OtherActor);
+	if (Enemy)
+	{
+		Enemy->Destroy();
+		OnDeath();
+	}
 }
 
