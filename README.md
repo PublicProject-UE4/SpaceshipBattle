@@ -2,6 +2,8 @@
 
  该项目使用C++和蓝图进行开发，涉及到部分粒子系统知识。
 
+![Image2](https://cdn.jsdelivr.net/gh/publicproject-ue4/image@master/2020/SpaceshipBattle/飞机大作战.png)
+
  1. 根据鼠标指向设置发射子弹方向
  2. WASD 设置飞机的移动
  3. 自动生成敌机，随机颜色，随机生成
