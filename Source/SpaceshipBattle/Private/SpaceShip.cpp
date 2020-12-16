@@ -26,17 +26,19 @@ ASpaceShip::ASpaceShip()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootSceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
-	RootComponent = RootSceneComp;
+	// RootSceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
+	// RootComponent = RootSceneComp;
+
+	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
+	// CollisionComp->SetupAttachment(RootComponent);
+	RootComponent = CollisionComp;
 
 	ShipSM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipSM"));
 	// ShipSM->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ShipSM->SetRelativeRotation(FRotator(0, 270, 0));
 	ShipSM->SetRelativeScale3D(FVector(0.75, 0.75, 0.75));
-	ShipSM->SetupAttachment(RootSceneComp);
+	ShipSM->SetupAttachment(RootComponent);
 
-	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
-	CollisionComp->SetupAttachment(RootComponent);
 
 	SpringComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringComp"));
 	SpringComp->SetRelativeRotation(FRotator(270,0,0));
@@ -157,7 +159,7 @@ void ASpaceShip::RestartLevel()
 void ASpaceShip::OnDeath()
 {
 	bDead = true;
-	RootSceneComp->SetVisibility(false, true);
+	CollisionComp->SetVisibility(false, true);
 	if (GameOverCue)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, GameOverCue, GetActorLocation());

@@ -17,17 +17,18 @@ AEnemy::AEnemy()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootSceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
-	RootComponent = RootSceneComp;
+	// RootSceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp"));
+	// RootComponent = RootSceneComp;
+
+	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
+	// CollisionComp->SetupAttachment(RootComponent);
+	RootSceneComp = CollisionComp;
 
 	EnemySM = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemySM"));
 	EnemySM->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	EnemySM->SetRelativeRotation(FRotator(0, 270, 0));
 	EnemySM->SetRelativeScale3D(FVector(0.75, 0.75, 0.75));
 	EnemySM->SetupAttachment(RootSceneComp);
-
-	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
-	CollisionComp->SetupAttachment(RootComponent);
 
 	Init();
 }
